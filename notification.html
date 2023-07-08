@@ -1,0 +1,31 @@
+<div class="flash-messages-container" id="flash-messages-container">
+{% with message = get_flashed_messages(with_categories=true) %}
+    {% if message %}
+        {% for category, msg in message %}
+            <div id="topbar" class="{{category}} topbar topbarhide">
+                <div style="border: none;" class="msgblock {{category}}">
+                    {{msg}}
+                </div>
+                <div id="close-btn" class="closeblock {{category}}">
+                    <svg width="15" height="15" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path d="M6.86 9l-5.417 5.416a1.514 1.514 0 0 0 2.14 2.14L9 11.14l5.416 5.417a1.514 1.514 0 0 0 2.14-2.14L11.14 9l5.417-5.416a1.514 1.514 0 0 0-2.14-2.14L9 6.86 3.584 1.443a1.514 1.514 0 0 0-2.14 2.14L6.86 9z" fill="#05192D" fill-rule="nonzero"></path></svg>
+                </div>
+            </div>
+        {% endfor %}
+        <script>
+            const bar = document.getElementById("topbar")
+            if(bar.classList.contains('topbarhide')){
+                bar.classList.remove('topbarhide')
+                bar.classList.add('topbarshow')
+                setTimeout(()=>{
+                    bar.classList.remove('topbarshow')
+                    bar.classList.add("topbarhide")
+                },3500)
+            }
+            document.getElementById("close-btn").addEventListener("click", ()=>{
+                bar.classList.remove('topbarshow')
+                bar.classList.add('topbarhide')
+            })
+        </script>
+    {% endif %}
+{% endwith %}
+</div>

@@ -1,0 +1,109 @@
+{% extends 'BaseTemplate.html' %}
+{% block title %}Student Registration{% endblock %}
+{% block content %}
+<div class="main-content-register">
+<div class="formoutercontainer">
+<div class="form_content_container">
+        <div class="sitename">
+            <h2>Registration Form</h2>
+        </div>
+
+        <div class="formcontainer">
+            <form method="POST" autocomplete="off" novalidate>
+                {{form.hidden_tag()}}
+                
+                <div class="formcont" style="align-items: inherit;">
+                    <div class="row gap-2 ms-0 me-0">
+                        <div class="col form" style="width: 8rem;">
+                            {{ form.FirstName }}
+                            {{form.FirstName.label(class='form__label')}}
+                            <i class="material-symbols-rounded no-select pln">person</i>
+                        </div>
+                        
+                        
+                        <div class="col form" style="width: 8rem;">
+                            {{ form.LastName }}
+                            {{form.LastName.label(class='form__label')}}
+                            <i class="material-symbols-rounded no-select pln">person</i>
+                        </div>
+                    </div>
+                    <div class="error">
+                        {% set err_val = None %}
+                        {% if form.FirstName.errors and form.LastName.errors %}
+                            {% set err_val = ['FirstName & LastName must be required'] %}
+                        {% else %}
+                            {% if form.LastName.errors %}
+                                {% set err_val = form.LastName.errors %}
+                            {% else %}
+                                {% if form.LastName.errors %}
+                                    {% set err_val = form.LastName.errors %}
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
+                        {% if err_val %}
+                            {% for i in err_val %}
+                                <span>{{ i }}</span>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="formcont">
+                    <div class="form">
+                        {{ form.email }}
+                        {{form.email.label(class='form__label')}}
+                        <i class="material-symbols-rounded no-select">mail</i>
+                    </div>
+                    <div class="error">
+                        {% if form.email.errors %}
+                            {% for i in form.email.errors %}
+                                <span>{{ i }}</span>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="formcont">
+                    <div class="form">
+                        {{ form.password }}
+                        {{form.password.label(class='form__label')}}
+                        <i class="material-symbols-rounded no-select">lock</i>
+                        <i id="togglePassword" onclick="eye_ball()" class="material-symbols-rounded no-select">visibility_off</i>
+                    </div>
+                    <div class="error">
+                        {% if form.password.errors %} 
+                            {% for i in form.password.errors %}
+                                <span>{{ i }}</span>
+                            {% endfor %} 
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="formcont">
+                    <div class="form">
+                        {{ form.confirm_password }}
+                        {{form.confirm_password.label(class='form__label')}}
+                        <i class="material-symbols-rounded no-select">lock</i>
+                    </div>
+                    <div class="error">
+                        {% if form.confirm_password.errors %} 
+                            {% for i in form.confirm_password.errors %}
+                                <span>{{ i }}</span>
+                            {% endfor %} 
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="button-div">
+                    {{ form.submit }}
+                </div>
+            </form>
+        </div>
+        
+        <div class="formfooter">
+            <p>Already registered ? <a href="{{url_for('Login')}}"> click here </a>  to Login</p>
+        </div>
+</div>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extends 'BaseTemplate.html' %}
+{% block title %}Supervisor View {% endblock %}
+{% block content %}
+<div class="main-content-supervisor">
+    <div id="popup-container">
+        <div id="popup-message" style="color: black;"></div>
+    </div>
+
+    <div class="container">
+        <div style="text-align: center;" class="my-4">
+            <h3>you can select your topcis that you are willing to supervise</h3>
+            <p><b>Note: </b>You can select as many topics you want to supervise.</p>
+        </div>
+
+        <ul class="list-group" style="color: black;">
+            {% for topic in project_topics %}
+                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap suptop" style="cursor: pointer; background: lavender;color: black;">
+                    <span> {{topic.id}}. {{topic.name}} </span>
+                    <div class="preferences-div no-select">
+                        <button class="topic-button pref_btn" data-topic-id="{{topic.id}}">select here to supervise this topic</button>
+                        <span id="selected-{{topic.id}}" class="selected-show">Topic Selected</span>
+                        <div id="cancel-{{topic.id}}" data-topic-cancel="{{topic.id}}" class="cancel-topic">
+                            <span class="material-symbols-rounded">close</span>
+                        </div>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+        <div class="alert alert-primary mt-3">
+            <label for="myDropdown">select total number of topics will you prefer:</label>
+            <select id="myDropdown" style="cursor: pointer;">
+                <option value="">--Select--</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+            </select>
+        </div>
+        <div class="sv-button-div">
+            <button class="sv-button" id="save-btn">Save My Topics</button>
+        </div>
+    </div>
+</div>
+    <script>
+        let selectedTopics = []
+        var csrf_token = "{{ csrf_token() }}";
+        const popupMessage = document.querySelector('#popup-message');
+        function showPopupMessage(message, nan) {
+            if(nan === true){
+                console.log(nan)
+                popupMessage.innerHTML = `
+                <p>${message}</p>
+                <div class="sv-button-div" style="margin: 1rem 0 0 0;display:flex; justify-content:center; gap:1.5rem">
+                    <button class="sv-button close">OK</button>
+                </div>
+            `;
+            
+            }
+            else if (nan === false){
+                popupMessage.innerHTML = `
+                <p>${message}</p>
+                <div class="sv-button-div" style="margin: 1rem 0 0 0;display:flex; justify-content:center; gap:1.5rem">
+                    <button class="sv-button close">Cancel</button>
+                    <button class="sv-button not_willing" id=not_willing_pop>OK</button>
+                </div>
+            `;
+            }
+
+            else{
+                popupMessage.innerHTML = `
+                <p>Please select atleast 1 topic to save your preference. <br> If you prefer not to select any topics
+                    then set the value to zero in the dropdown menu
+                </p>
+                <div class="sv-button-div" style="margin: 1rem 0 0 0;display:flex; justify-content:center; gap:1.5rem">
+                    <button class="sv-button close">OK</button>
+                </div>
+            `;
+            }
+            
+            const closeButton = popupMessage.querySelector('button.close');
+            closeButton.addEventListener('click', hidePopupMessage);
+            const not_willing_pop = document.getElementById("not_willing_pop")
+            document.querySelector('#popup-container').classList.add('show');
+            
+            if (not_willing_pop){
+                not_willing_pop.addEventListener('click', ()=>{
+                var empty_array = {"selectedTopics": [], "noOfTopics": 0}
+                fetch("/supervisortopics", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrf_token
+                },
+                body: JSON.stringify(empty_array) 
+            })
+            .then(response => response.json())
+            .then(data =>{
+                if(data.message == 'success'){
+                    window.location.href = data.redirect
+                }
+            })
+            })
+        }
+        }
+
+        function hidePopupMessage() {
+            document.querySelector('#popup-container').classList.remove('show');
+        }
+
+        var saveBtn = document.getElementById('save-btn');
+        const topicButtons = document.querySelectorAll('.topic-button');
+        const cancelButtons = document.querySelectorAll('.cancel-topic');
+
+        topicButtons.forEach(button => {
+            const topicId = button.getAttribute('data-topic-id');
+            const li = button.closest('li')
+            const cancelButton = li.querySelector('.cancel-topic') 
+            const selectedShow = document.getElementById(`selected-${topicId}`)
+
+            button.addEventListener('click', ()=>{
+                selectedTopics.push(topicId)
+                li.classList.add('selected')
+                cancelButton.style.display = 'flex'
+                button.style.display = 'none'
+                selectedShow.style.display = 'flex'
+            })
+
+            cancelButton.addEventListener('click', ()=>{
+                const index = selectedTopics.indexOf(topicId)
+                if(index !== -1){
+                    selectedTopics.splice(index,1)
+                }
+                li.classList.remove('selected')
+                cancelButton.style.display = 'none'
+                button.style.display = 'flex'
+                selectedShow.style.display = 'none'
+            })
+        });
+        saveBtn.addEventListener('click', ()=>{
+            const selval = parseInt(document.getElementById("myDropdown").value)
+            if ( selval === 0){
+                showPopupMessage(`The Number of topics you are willing to supervise is set to - <span style='color:red'> Zero </span>. <br>
+                We assume that you are not interested to supervise any of these topics, <br> So if any topics you selected have been removed from 
+                your preferences`, false);
+            }
+            else if (isNaN(selval)){
+                showPopupMessage(`Please select the total number of topics that you are willing to supervise`, true)
+            }
+            else{
+                if(selectedTopics.length === 0){
+                    showPopupMessage(`Please select atleast 1 topic to save your preference. <br> If you prefer not to select any topics
+                    then set the value to zero in the dropdown menu`, 'notopics')
+                }
+                else{
+                    var serverData = {"selectedTopics": selectedTopics, "noOfTopics": selval}
+                    
+                    fetch("/supervisortopics", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrf_token
+                        },
+                        body: JSON.stringify(serverData) 
+                    })
+                    .then(response => response.json())
+                    .then(data =>{
+                        if(data.message == 'success'){
+                            window.location.href = data.redirect
+                        }
+                    })
+                }
+            }
+        })
+    </script>
+{% endblock %}

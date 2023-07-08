@@ -1,0 +1,125 @@
+{% extends 'BaseTemplate.html' %}
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="profile-content">
+        <div class="user-details">
+            <div>
+                {% if current_user.role == "supervisor" %}
+                <b>Name</b> : {{current_user.supervisor_Fname}} {{current_user.supervisor_Lname}}
+                {% else %}
+                <b>Name</b> : {{current_user.student_Fname}} {{current_user.student_Lname}}
+                {% endif %}
+            </div>
+            <div>
+                {% if current_user.role == "supervisor" %}
+                <b>Email-address</b> : {{current_user.supervisor_email}}
+                {% else %}
+                <b>Email-address</b> : {{current_user.student_email}}
+                {% endif %}
+            </div>
+            <div>
+                <b>Role</b> : {{current_user.role}}
+            </div>
+        </div>
+        <div class="topics-selected-container">
+            <div class="topic-heading">
+                {% if current_user.role == 'supervisor' and current_user.willing_to_supervise == False %}
+                    <div class="alert alert-info" style="text-align: center;" role="alert">
+                        You have seleted not willing to supervise any topics
+                    </div>
+                {% else %}
+                    {% if current_user.role == 'supervisor' %}
+                        <div>
+                            <p class="btn btn-primary mb-3" style="background-color: lavender; color: black; border: none;">
+                                Number of topics you are willing to supervise is <span class="badge bg-info text-dark">{{current_user.number_of_topics_to_supervise}}</span>
+                            </p>
+                        </div>
+                    {% endif %}
+                    <h5> Topics selected by you are listed below :</h5>
+                {% endif %}
+            </div>
+            <div class="topcis-selected-list">
+                <ul class="list-group" style="width: 50%;">
+                    {% if current_user.role == 'supervisor' %}
+                        {% for to in supervisor_topics %}
+                            {% if (to.supervisors_id != None) and (current_user in to.supervisors_id) %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap suptop rmb" style="cursor: pointer;">
+                                <span>{{to.name}}</span>
+                                <div class="del-icon" data-topic-remove="{{to.id}}">
+                                <span class="material-symbols-rounded">
+                                    delete
+                                    </span>
+                                </div>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        {% for t_name,t_priority in preferred_topics %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap suptop" style="cursor: pointer; background-color: lavender; position: relative;">
+                            
+                            <span>
+                                {{t_name}}
+                            </span>
+                            <span>
+                                <span style="font-size: 15px;">Preference -</span> <b>{{t_priority}}</b>
+                            </span>
+                            <span class="edit_text">Edit -
+                                <span class="material-symbols-rounded edit_icon" id="{{t_priority}}" data-priority-value="{{t_priority}}">
+                                    edit
+                                </span>
+                            </span>
+                            
+                        </li>
+                        {% endfor %}
+                        
+                    {% endif %}
+                </ul>
+                <script>
+                    const remove_button = document.querySelectorAll(".del-icon")
+                    const csrf_token = "{{ csrf_token() }}";
+
+                    remove_button.forEach(rm_button => {
+                        rm_button.addEventListener('click', ()=>{
+                            topic_to_remove = rm_button.getAttribute('data-topic-remove')
+                            rm = rm_button.closest('li')
+                            rm.classList.add('removing')
+                            setTimeout(function(){
+                                rm.remove()
+                            },500)
+                            fetch("/remove-topics", {
+                                method: 'POST',
+                                headers: {'X-CSRFToken': csrf_token, 'Content-Type':'application/json'},
+                                body: JSON.stringify({'topic_data':topic_to_remove})
+                            })
+                            .then(response => response.json())
+                            .catch(error => console.log(error))
+                        })
+                    });
+                </script>
+                <script>
+                    const newCsrfToken = "{{ csrf_token() }}";
+                    var edit_icon = document.querySelectorAll(".edit_icon")
+                    edit_icon.forEach(icon =>{
+                        icon.addEventListener('click', ()=>{
+                            priority_number = icon.getAttribute('data-priority-value')
+                            console.log("clicked priority number " + priority_number)
+                            fetch("/preferences_edit", {
+                                method: 'POST',
+                                headers: {'X-CSRFToken': newCsrfToken, 'Content-Type':'application/json'},
+                                body: JSON.stringify({'priority_to_edit':priority_number})
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.redirect){
+                                    window.location.href = data.redirect
+                                }
+                            })
+                            .catch(error => console.log(error))
+                        })
+                    })
+                </script>
+            </div>
+        </div>
+    </div>
+{% endblock %}

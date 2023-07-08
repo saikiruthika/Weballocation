@@ -1,0 +1,27 @@
+{% if msg %}
+    <div style="background-color: hsl(210deg, 38%, 15%); padding: 1rem 1.2rem">
+
+        <h3 style="text-transform: capitalize; color: pink; font-family: 'Poppins', sans-serif;">Hi {{ username }},</h3>
+
+        <h4 style="padding-left: 1.3rem; padding-right: 1.3rem;  color: white; font-family: 'Poppins', sans-serif;">
+            {{remainder_text}}
+        </h4>
+
+        <h4 style="color: pink; text-decoration: none;">Sincerely yours,<br><span style="text-decoration: none;">University of Leicester</span></h4>
+    </div>
+{% else %}
+
+<div style="background-color: hsl(210deg, 38%, 15%); padding: 1rem 1.2rem">
+
+    <h3 style="text-transform: capitalize; color: pink; font-family: 'Poppins', sans-serif;">Hi {{ username }},</h3>
+
+    <h4 style="padding-left: 1.3rem; padding-right: 1.3rem;  color: white; font-family: 'Poppins', sans-serif;">
+        We received a request to reset your Account password. Here's your link to reset your password
+        <a style="font-size: 1rem;" href="{{ url_for('reset_token', token = token, _external=True)}}">Click Here</a>
+    </h4>
+    <p style="padding-left: 1.3rem; padding-right: 1.3rem; color: white; font-family: 'Poppins', sans-serif;">If you did not request this code, it is possible that someone else is trying to access your Account <span style="color: blue;">{{email}}</span>. Do not forward or give this link to anyone.</p>
+
+    <h4 style="color: pink; text-decoration: none;">Sincerely yours,<br><span style="text-decoration: none;">University of Leicester</span></h4>
+</div>
+
+{% endif %}

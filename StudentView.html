@@ -1,0 +1,140 @@
+{% extends 'BaseTemplate.html' %}
+{% block title %}Student View {% endblock %}
+{% block content %}
+<div class="main-content-student">
+<div id="popup-container">
+    <div id="popup-message" style="color: black;"></div>
+</div>
+<div style="text-align: center; color: white;" class="my-4">
+    <h3>You can Select your topics by preferences</h3>
+    <br>
+    <p><b>Note: </b>You must have to select 4 topics.</p>
+</div>
+<div style="padding: 2rem;">
+    <h1 class="btn btn-primary">
+        Please select topics before endline : <span class="badge bg-secondary">{{deadline}}</span>
+    </h1>
+</div>
+<div class="container-fluid stu_topics_container" style="padding: 2rem;">
+    <ul class="list-group">
+        {% set priority_value = request.view_args.get('priority') %}
+        {% for topic in project_topics %}
+            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap" style="background-color: lavender; cursor: pointer;">
+                {{topic.id}}. {{topic.name}}
+                <div class="preferences-div no-select">
+                    {% if priority_value == None %}
+                    <button class="preference pref_btn newbg" data-topic="{{topic.id}}" data-pref="1">Preference 1</button>
+                    <button class="preference pref_btn newbg" data-topic="{{topic.id}}" data-pref="2">Preference 2</button>
+                    <button class="preference pref_btn newbg" data-topic="{{topic.id}}" data-pref="3">Preference 3</button>
+                    <button class="preference pref_btn newbg" data-topic="{{topic.id}}" data-pref="4">Preference 4</button>
+                    {% else %}
+                    <button class="preference pref_btn newbg" data-topic="{{topic.id}}" data-pref="{{priority_value}}">Preference {{priority_value}}</button>
+                    {% endif %}
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+    <div class="sv-button-div">
+        <button class="sv-button" id="save-btn">Save Preferences</button>
+    </div>
+</div>
+</div>
+<script>
+var selectedPrefs = {};
+const popupMessage = document.querySelector('#popup-message');
+function showPopupMessage(message) {
+  popupMessage.innerHTML = `
+    <p>${message}</p>
+    <div class="sv-button-div" style="margin: 1rem 0 0 0">
+        <button class="sv-button close">Close</button>
+    </div>
+  `;
+  const closeButton = popupMessage.querySelector('button.close');
+  closeButton.addEventListener('click', hidePopupMessage);
+  document.querySelector('#popup-container').classList.add('show');
+}
+function hidePopupMessage() {
+  document.querySelector('#popup-container').classList.remove('show');
+}
+
+var csrf_token = "{{ csrf_token() }}";
+var saveBtn = document.getElementById('save-btn');
+var prefButtons = document.querySelectorAll('.preference');
+for (var i = 0; i < prefButtons.length; i++) {
+    prefButtons[i].addEventListener('click', function() {
+    var topic = this.getAttribute('data-topic');
+    var pref = this.getAttribute('data-pref');
+    if (selectedPrefs[topic]) {
+        var prevSelected = document.querySelector('.preference[data-topic="' + topic + '"][data-pref="' + selectedPrefs[topic] + '"]');
+        prevSelected.classList.remove('stuselected');
+    }
+    
+    this.classList.add('stuselected');
+    selectedPrefs[topic] = pref;
+    
+    for (var t in selectedPrefs) {
+        if (t !== topic && selectedPrefs[t] === pref) {
+        var prevSelected = document.querySelector('.preference[data-topic="' + t + '"][data-pref="' + pref + '"]');
+        prevSelected.ariaDisabled = true
+        prevSelected.classList.remove('stuselected');
+        delete selectedPrefs[t];
+        }
+    }
+    });
+}
+
+
+var isTherepriorityToEdit = '{{priority_value}}'
+if (isTherepriorityToEdit === "None"){
+    saveBtn.addEventListener('click', function() {
+        if(Object.keys(selectedPrefs).length < 4){
+            showPopupMessage(`You must have to select 4 Preferences. <br>
+            But you selected only ${Object.keys(selectedPrefs).length}`);
+        }else{
+            fetch('/selectedpreferences', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrf_token
+                },
+                body: JSON.stringify(selectedPrefs)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.message == 'success'){
+                    window.location.href = data.redirect
+                    console.log(data.values)
+                }
+            })
+            .catch(error => console.log(error))
+        }
+        })
+}
+else{
+    var priority_to_change = isTherepriorityToEdit
+    saveBtn.addEventListener('click', function(){
+        fetch('/changepriority', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token
+            },
+            body: JSON.stringify(selectedPrefs)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.redirect){
+                window.location.href = data.redirect
+            }
+        })
+        .catch(error => console.log(error))
+    })
+
+}
+
+</script>
+
+    
+    
+
+{% endblock %}

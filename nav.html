@@ -1,0 +1,68 @@
+<div class="navigation container-fluid" id="navigation">
+    <div class="logoname">
+        <img src="{{url_for('static', filename='logo.png')}}" alt="logoimg" id="logoimg">
+    </div>
+    <div class="links">
+        {% if not url_for(request.endpoint, **request.view_args) == '/' %}
+            <a data-text="Go Home" class="navig_style" href="{{url_for('home')}}">
+                <span class="material-symbols-rounded no-select">home</span>
+            </a>
+        {% endif %}
+
+        {% if not current_user.is_authenticated %}
+        <a data-text="Login" class="navig_style navlink_words" href="{{url_for('Login')}}">
+            Login
+        </a>
+
+        <a data-text="Register" class="navig_style navlink_words" href="{{url_for('Register')}}">
+            Register
+        </a>
+
+        {% endif %}
+
+        {% if current_user.is_authenticated and current_user.role =="student" and url_for(request.endpoint, **request.view_args) != '/StudentView' %}
+            <a data-text="Topics" class="navig_style navlink_words" href="{{url_for('StudentView')}}">
+                Select Topics
+            </a>
+        {% endif %}
+        
+        {% if current_user.is_authenticated and current_user.role =="supervisor" and url_for(request.endpoint, **request.view_args) != '/SupervisorView' %}
+            <a data-text="Topics" class="navig_style navlink_words" href="{{url_for('SupervisorView')}}">
+                Select Topics
+            </a>
+        {% endif %}
+
+        {% if current_user.is_authenticated and current_user.role =="supervisor" and current_user.supervisor_email=="admin@leicester.ac.uk"%}
+            <a data-text="Admin Dashboard" class="navig_style navlink_words" href="{{url_for('admin.index')}}">
+                Admin
+            </a>
+
+        {% endif %}
+
+        {% if current_user.is_authenticated %}
+            <a data-text="Logout" class="navig_style" href="{{url_for('logout')}}">
+                <span class="material-symbols-rounded no-select">logout</span>
+            </a>
+
+            {% if url_for(request.endpoint, **request.view_args) != '/profile' %}
+                <a data-text="Profile" class="navig_style" href="{{url_for('Profile')}}">
+                    <span class="material-symbols-rounded no-select">person_4</span>
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+
+<script>
+    var prevScrollpos = window.pageYOffset;
+    window.onscroll = function() {
+    var currentScrollPos = window.pageYOffset;
+    if (prevScrollpos > currentScrollPos) {
+        document.querySelector(".navigation").classList.remove("hide");
+    } else {
+        document.querySelector(".navigation").classList.add("hide");
+    }
+    prevScrollpos = currentScrollPos;
+    }
+</script>
